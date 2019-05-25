@@ -13,10 +13,10 @@ const int colScreen = 30;
 
 const int rowSnake = (rowScreen-2)*(colScreen-2);
 const int colSnake = 2;
-//const int lengthSnake = 2;
-int keyPress;
+int keyPress, keyPressHist;
 bool gameOver = false;
-
+int lengthSnake = 5;
+unsigned int microseconds = 50000;
 
 /*
 // method1
@@ -70,9 +70,6 @@ void printScreen(char** screen, int** snake){
 }
 
 
-
-
-
 char** getScreen(){
     char** screen = new char*[rowScreen];
     for (int i = 0; i < rowScreen; i++) {
@@ -102,19 +99,20 @@ char** getSnake(){
 */
 
 
-int** getSnake(){
+int** getSnake(int lengthSnake){
+
     int** snake = new int*[rowSnake];
     for (int i = 0; i < rowSnake; i++) {
         snake[i] = new int[colSnake];
     }
-    snake[0][0] = 10;
-    snake[0][1] = 15;
 
-    snake[1][0] = 10;
-    snake[1][1] = 14;
-
-    snake[2][0] = 10;
-    snake[2][1] = 13;
+    int tmpX = 10;
+    int tmpY = 15;
+    for(int i = 0; i < lengthSnake; i++){
+        snake[i][0] = tmpX;
+        snake[i][1] = tmpY;
+        tmpY = tmpY - 1;
+    }
 
     return snake;
 }
@@ -160,51 +158,65 @@ void updateScreen(char** screen, int** snake){
 */
 
 
-void moveSnake(char** screen, int** snake) {
-
-    while(true)
-    {
-
-    switch(keyPress)
-        {
-        case 72:
-        {
-            //UP
-            updateSnake(snake,'u');
-            //printScreen(screen, snake);
-            break;
-        }
-        case 80:
-        {
-            // DOWN
-            updateSnake(snake,'d');
-            //printScreen(screen, snake);
-            break;
-        }
-        case 77:
-        {
-            // RIGHT
-            updateSnake(snake,'r');
-            //printScreen(screen, snake);
-            break;
-        }
-        case 75:
-        {
-            // LEFT
-            updateSnake(snake,'l');
-            //printScreen(screen, snake);
-            break;
+bool isGameOver(char** screen, int** snake){
+    // Duvara Carpma Durumu
+    if(screen[snake[0][0]][snake[0][1]] == '*'){
+        gameOver = true;
+    }
+    // Kuyruguna Carpma Durumu
+    for(int i = 1; i < rowSnake; i++){
+        if((snake[0][0] == snake[i][0]) && (snake[0][1] == snake[i][1])){
+            gameOver = true;
         }
     }
-    printScreen(screen, snake);
-    sleep(1);
-    system("CLS");
-    }
+    return gameOver;
 }
 
-void thread_handler() {
+
+int moveSnake(char** screen, int** snake) {
+
     while(true)
     {
+        if((keyPress == 72) && (keyPressHist != 80)){
+            updateSnake(snake,'u');
+            keyPressHist = keyPress;
+        } else if((keyPress == 80) && (keyPressHist == 72)){
+            updateSnake(snake,'u');
+        } else if((keyPress == 72) && (keyPressHist == 80)){
+            updateSnake(snake,'d');
+        } else if((keyPress == 80) && (keyPressHist != 72)){
+            updateSnake(snake,'d');
+            keyPressHist = keyPress;
+        } else if((keyPress == 77) && (keyPressHist != 75)){
+            updateSnake(snake,'r');
+            keyPressHist = keyPress;
+        } else if((keyPress == 77) && (keyPressHist == 75)){
+            updateSnake(snake,'l');
+        } else if((keyPress == 75) && (keyPressHist == 77)){
+            updateSnake(snake,'r');
+        } else if((keyPress == 75) && (keyPressHist != 77)){
+            updateSnake(snake,'l');
+            keyPressHist = keyPress;
+
+        }
+
+        system("CLS");
+        if(isGameOver(screen, snake)){
+            break;
+        }
+        printScreen(screen, snake);
+        usleep(microseconds);
+        }
+    cout << "Game Over" << endl;
+    return 1;
+}
+
+[[noreturn]] void thread_handler() {
+    while(true)
+    {
+        if(gameOver){
+            break;
+        }
         keyPress = getch();
     }
 }
@@ -213,7 +225,7 @@ int main() {
     char **screen;
     int **snake;
     screen = getScreen();
-    snake = getSnake();
+    snake = getSnake(lengthSnake);
     //thread t(thread_handler, screen, snake);
     thread t(thread_handler);
     moveSnake(screen, snake);
