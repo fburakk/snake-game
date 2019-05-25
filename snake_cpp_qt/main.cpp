@@ -14,6 +14,9 @@ const int colScreen = 30;
 const int rowSnake = (rowScreen-2)*(colScreen-2);
 const int colSnake = 2;
 //const int lengthSnake = 2;
+int keyPress;
+bool gameOver = false;
+
 
 /*
 // method1
@@ -147,22 +150,20 @@ int** updateSnake(int** snake, char direction){
     return snake;
 }
 
-int keyPress;
-
+/*
 void updateScreen(char** screen, int** snake){
     while (true) {
-        //sleep(3/4);
         system("CLS");
         printScreen(screen, snake);
     }
 }
+*/
 
 
 void moveSnake(char** screen, int** snake) {
 
     while(true)
     {
-        keyPress = getch();
 
     switch(keyPress)
         {
@@ -170,7 +171,6 @@ void moveSnake(char** screen, int** snake) {
         {
             //UP
             updateSnake(snake,'u');
-            //sleep(1);
             //printScreen(screen, snake);
             break;
         }
@@ -178,7 +178,6 @@ void moveSnake(char** screen, int** snake) {
         {
             // DOWN
             updateSnake(snake,'d');
-            //sleep(1);
             //printScreen(screen, snake);
             break;
         }
@@ -186,7 +185,6 @@ void moveSnake(char** screen, int** snake) {
         {
             // RIGHT
             updateSnake(snake,'r');
-            //sleep(1);
             //printScreen(screen, snake);
             break;
         }
@@ -194,63 +192,31 @@ void moveSnake(char** screen, int** snake) {
         {
             // LEFT
             updateSnake(snake,'l');
-            //sleep(1);
             //printScreen(screen, snake);
             break;
         }
     }
-
-}
-}
-
-
-void thread_handler(char** screen, int** snake) {
-    while(true)
-    {
-        // Move the snake
-        //system("CLS");
-        //printScreen(screen, snake);
-        //sleep(3/4);
-        moveSnake(screen, snake);
-
+    printScreen(screen, snake);
+    sleep(1);
+    system("CLS");
     }
 }
 
-
+void thread_handler() {
+    while(true)
+    {
+        keyPress = getch();
+    }
+}
 
 int main() {
     char **screen;
     int **snake;
     screen = getScreen();
     snake = getSnake();
-    thread t(thread_handler, screen, snake);
-    updateScreen(screen, snake);
+    //thread t(thread_handler, screen, snake);
+    thread t(thread_handler);
+    moveSnake(screen, snake);
     t.join();
-
-
-    /*
-    int key_press;
-    int ascii_value;
-
-    cout << "Press 'S' to start" << endl;
-    ascii_value = getch();
-
-    while(getch() != 27){
-
-
-        printScreen(screen, snake);
-        //usleep(100000);
-        system ("CLS");
-        //cout << flush;
-
-        //if(ascii_value==27){
-        //    break;
-        //} else
-        if (ascii_value == 77) {
-            snake = updateSnakeRight(snake);
-            //ascii_value = 115;
-        }
-
-       }*/
 }
 
