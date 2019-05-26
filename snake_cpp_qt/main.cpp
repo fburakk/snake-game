@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <conio.h>
 #include <thread>
+#include <cstdlib>
 
 using namespace std;
 
@@ -15,31 +16,9 @@ const int rowSnake = (rowScreen-2)*(colScreen-2);
 const int colSnake = 2;
 int keyPress, keyPressHist;
 bool gameOver = false;
-int lengthSnake = 5;
-unsigned int microseconds = 50000;
-
-/*
-// method1
-void printScreen(char** screen, char** snake){
-    //int rows =  sizeof myword / sizeof myword[0]; // 2 rows
-    //int cols = sizeof myword[0] / sizeof(int); // 5 cols
-
-    for(int i = 0; i < rowScreen; i++){
-        for(int j = 0 ; j < colScreen; j++){
-            if(screen[i][j] == '*'){
-                cout << screen[i][j];
-            } else if(snake[i][j] == '?' ){
-                cout << snake[i][j];
-            } else {
-                cout << ' ';
-            }
-        }
-        cout << endl;
-    }
-
-    //system ("CLS");
-    //cout << flush;
-}*/
+int lengthSnake = 3;
+unsigned int microseconds = 60000;
+bool noFood = true;
 
 bool printSnake(int i, int j, int** snake){
     for (int k = 0; k < rowSnake; k++) {
@@ -51,15 +30,16 @@ bool printSnake(int i, int j, int** snake){
 }
 
 // method 2
-void printScreen(char** screen, int** snake){
-    //int rows =  sizeof myword / sizeof myword[0]; // 2 rows
-    //int cols = sizeof myword[0] / sizeof(int); // 5 cols
+void printScreen(char** screen, int** snake, int** food){
+
 
     for(int i = 0; i < rowScreen; i++){
-        for(int j = 0 ; j < colScreen; j++){
+        for(int j = 0; j < colScreen; j++){
             if(screen[i][j] == '*'){
                 cout << screen[i][j];
             } else if(printSnake(i, j, snake)) {
+                cout << '*';
+            } else if((food[0][0]==i)&&(food[0][1]==j)) {
                 cout << '*';
             } else {
                 cout << ' ';
@@ -69,7 +49,7 @@ void printScreen(char** screen, int** snake){
     }
 }
 
-
+// Ekranı ve sınırları olustur
 char** getScreen(){
     char** screen = new char*[rowScreen];
     for (int i = 0; i < rowScreen; i++) {
@@ -83,22 +63,9 @@ char** getScreen(){
     return screen;
 }
 
-/*
-char** getSnake(){
-    char** snake = new char*[rowSnake];
-    for (int i = 0; i < rowSnake; i++) {
-        snake[i] = new char[colSnake];
-        for (int j = 0; j < colSnake; j++) {
-            if(((i==10)&&(j==15))||((i==10)&&(j==16))||((i==10)&&(j==17))){
-                snake[i][j] = '?';
-            }
-        }
-    }
-    return snake;
-}
-*/
 
 
+// Yılan olustur
 int** getSnake(int lengthSnake){
 
     int** snake = new int*[rowSnake];
@@ -118,7 +85,7 @@ int** getSnake(int lengthSnake){
 }
 
 
-int** updateSnake(int** snake, char direction){
+void updateSnake(int** snake, char direction, int** food){
     int tmpX1 = 0, tmpY1 = 0, tmpX2 = 0, tmpY2 = 0;
     for (int i = 0; i < rowSnake; i++) {
             if(i == 0){
@@ -144,18 +111,36 @@ int** updateSnake(int** snake, char direction){
                 tmpX2 = tmpX1;
                 tmpY2 = tmpY1;
             }
+
     }
-    return snake;
+    //return snake;
 }
 
-/*
-void updateScreen(char** screen, int** snake){
-    while (true) {
-        system("CLS");
-        printScreen(screen, snake);
-    }
+
+int** getFood(){
+    int** food = new int*[1];
+    food[0] = new int[2];
+    return food;
 }
-*/
+
+void updateFood(int** snake, int** food){
+    int foodLocationXTmp = food[0][0];
+    int foodLocationYTmp = food[0][1];
+
+    while(noFood){
+        foodLocationXTmp = rand() % (rowScreen-2);
+        foodLocationYTmp = rand() % (colScreen-2);
+        noFood = false;
+
+        for(int i = 0; i < rowSnake; i++){
+            if((foodLocationXTmp == snake[i][0])&&(foodLocationYTmp == snake[i][1])){
+                noFood = true;
+            }
+        }
+    }
+    food[0][0] = foodLocationXTmp;
+    food[0][1] = foodLocationYTmp;
+   }
 
 
 bool isGameOver(char** screen, int** snake){
@@ -172,39 +157,48 @@ bool isGameOver(char** screen, int** snake){
     return gameOver;
 }
 
+void growSnake(int** snake, int** food){
+    if((snake[0][0]==food[0][0])&&(snake[0][1]==food[0][1])){
+        snake[lengthSnake][0] = food[0][0];
+        snake[lengthSnake][1] = food[0][1];
+        lengthSnake = lengthSnake + 1;
+        noFood = true;
+    }
+}
 
-int moveSnake(char** screen, int** snake) {
+int moveSnake(char** screen, int** snake, int** food) {
 
     while(true)
     {
         if((keyPress == 72) && (keyPressHist != 80)){
-            updateSnake(snake,'u');
+            updateSnake(snake,'u',food);
             keyPressHist = keyPress;
         } else if((keyPress == 80) && (keyPressHist == 72)){
-            updateSnake(snake,'u');
+            updateSnake(snake,'u',food);
         } else if((keyPress == 72) && (keyPressHist == 80)){
-            updateSnake(snake,'d');
+            updateSnake(snake,'d',food);
         } else if((keyPress == 80) && (keyPressHist != 72)){
-            updateSnake(snake,'d');
+            updateSnake(snake,'d',food);
             keyPressHist = keyPress;
         } else if((keyPress == 77) && (keyPressHist != 75)){
-            updateSnake(snake,'r');
+            updateSnake(snake,'r',food);
             keyPressHist = keyPress;
         } else if((keyPress == 77) && (keyPressHist == 75)){
-            updateSnake(snake,'l');
+            updateSnake(snake,'l',food);
         } else if((keyPress == 75) && (keyPressHist == 77)){
-            updateSnake(snake,'r');
+            updateSnake(snake,'r',food);
         } else if((keyPress == 75) && (keyPressHist != 77)){
-            updateSnake(snake,'l');
+            updateSnake(snake,'l',food);
             keyPressHist = keyPress;
 
         }
-
         system("CLS");
         if(isGameOver(screen, snake)){
             break;
         }
-        printScreen(screen, snake);
+        growSnake(snake, food);
+        updateFood(snake, food);
+        printScreen(screen, snake, food);
         usleep(microseconds);
         }
     cout << "Game Over" << endl;
@@ -224,11 +218,13 @@ int moveSnake(char** screen, int** snake) {
 int main() {
     char **screen;
     int **snake;
+    int **food;
     screen = getScreen();
     snake = getSnake(lengthSnake);
+    food = getFood();
     //thread t(thread_handler, screen, snake);
     thread t(thread_handler);
-    moveSnake(screen, snake);
+    moveSnake(screen, snake, food);
     t.join();
 }
 
